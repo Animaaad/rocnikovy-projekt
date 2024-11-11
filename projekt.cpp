@@ -70,7 +70,7 @@ bool recursion(int i, int j) {
     if (graph[i].size() > 3 || graph[j].size() > 3) return false;
     if (i == j && j != k2 - 1) return recursion(i, j + 1);
     if (i == k2 && j == 0) {
-       for (int i = 0; i < n; i++) {
+       for (int i = 0; i < k2; i++) {
             if (graph[i].size() != 3) return false;
        } if (check_cycle() >= g) return true;
     }
@@ -104,4 +104,9 @@ int main() {
     int a = recursion(0, 0);
     if (a == 0) std::cout << "false" << std::endl;
     else std::cout << "true" << std::endl;
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < graph[i].size(); j++) {
+            std::cout << i << ' ' << graph[i][j] << std::endl;
+        }
+    }
 }
