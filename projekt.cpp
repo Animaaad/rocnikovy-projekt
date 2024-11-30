@@ -7,7 +7,7 @@ int k = 6;
 int d = 3;
 int g = 6;
 int n = 18;
-int k2 = k * 2; 
+int k2 = k * 2;
 std::vector<std::vector<int>> graph;
 
 bool contains(const std::vector<int> vec, int value) {
@@ -15,6 +15,37 @@ bool contains(const std::vector<int> vec, int value) {
 }
 
 std::vector<std::vector<int>> initiate_graph() {
+    std::vector<std::vector<int>> graf;
+    int current;
+    for (int layer = 0; layer < d / 2; layer++) {
+        int layer_total = (2 ^ layer) * k;
+        int layers_total = (2 ^ (layer + 1) - 1) * k ;
+        for (int i = 0; i < layer_total; i++) {
+            std::vector<int> vec;
+            current++;
+            if (layer == 0) {
+                int child1 = layer_total + (i) * 2;
+                int child2 = child1 + 1;
+                vec.push_back(child1);
+                vec.push_back(child2);
+            } else if (layer == d / 2) {
+                int parent = (2 ^ (layer - 1)) * k - i / 2 ;
+                vec.push_back(parent);
+            } else {
+                int child1 = layers_total + (i) * 2;
+                int child2 = child1 + 1;
+                vec.push_back(child1);
+                vec.push_back(child2);
+                int parent = (2 ^ (layer - 1)) * k - i / 2 ;
+                vec.push_back(parent);
+            }
+            graf.push_back(vec);
+        }
+    }
+    return graf;
+}
+
+std::vector<std::vector<int>> initiate_graph_6() {
     std::vector<std::vector<int>> graf;
     for (int i = 0; i < k2; i++) {
         std::vector<int> vec;
@@ -100,7 +131,7 @@ bool recursion(int i, int j) {
 }
 
 int main() {
-    graph = initiate_graph();
+    graph = initiate_graph_6();
     int a = recursion(0, 0);
     if (a == 0) std::cout << "false" << std::endl;
     else std::cout << "true" << std::endl;
