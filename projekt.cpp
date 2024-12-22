@@ -2,12 +2,16 @@
 #include <vector>
 #include <queue>
 #include <algorithm>
-#define Graph std::vector<std::vector<bool>>;
+#include <cmath>
 int k = 6;
 int d = 3;
 int g = 6;
-int n = 18;
-int k2 = k * 2;
+int depth = d / 2;
+int start = k * (std::pow(2, depth) - 1);
+int outer_layer = (std::pow(2, (depth))) * k;
+int end = start + outer_layer;
+int n = end;
+int k3 = k * 2;
 std::vector<std::vector<int>> graph;
 
 bool contains(const std::vector<int> vec, int value) {
@@ -17,9 +21,9 @@ bool contains(const std::vector<int> vec, int value) {
 std::vector<std::vector<int>> initiate_graph() {
     std::vector<std::vector<int>> graf;
     int current;
-    for (int layer = 0; layer < d / 2; layer++) {
-        int layer_total = (2 ^ layer) * k;
-        int layers_total = (2 ^ (layer + 1) - 1) * k ;
+    for (int layer = 0; layer <= depth; layer++) {
+        int layer_total = std::pow(2, layer) * k;
+        int layers_total = std::pow(2, (layer + 1) - 1) * k ;
         for (int i = 0; i < layer_total; i++) {
             std::vector<int> vec;
             current++;
@@ -28,35 +32,21 @@ std::vector<std::vector<int>> initiate_graph() {
                 int child2 = child1 + 1;
                 vec.push_back(child1);
                 vec.push_back(child2);
-            } else if (layer == d / 2) {
-                int parent = (2 ^ (layer - 1)) * k - i / 2 ;
-                vec.push_back(parent);
+            } else if (layer == depth) {
+                int parent = std::pow(2, (layer - 1)) * k - //2 ^ (layer - 1) * k is zero of the outer level,   
+                (std::pow(2, (layer - 1)) * k - i / 2); //subtracting the reverse of the current vertice position                                  
+                vec.push_back(parent);                  //to get to the correct parent
             } else {
                 int child1 = layers_total + (i) * 2;
                 int child2 = child1 + 1;
                 vec.push_back(child1);
                 vec.push_back(child2);
-                int parent = (2 ^ (layer - 1)) * k - i / 2 ;
+                int parent = std::pow(2, (layer - 1)) * k - 
+                (std::pow(2, (layer - 1)) * k - i / 2);
                 vec.push_back(parent);
             }
             graf.push_back(vec);
         }
-    }
-    return graf;
-}
-
-std::vector<std::vector<int>> initiate_graph_6() {
-    std::vector<std::vector<int>> graf;
-    for (int i = 0; i < k2; i++) {
-        std::vector<int> vec;
-        vec.push_back(i / 2 + 12);
-        graf.push_back(vec);
-    }
-    for (int i = k2; i < n; i++) {
-        std::vector<int> vec;
-        vec.push_back((i - 12) * 2);
-        vec.push_back((i - 12) * 2 + 1);
-        graf.push_back(vec);
     }
     return graf;
 }
@@ -99,19 +89,20 @@ int check_cycle() {
 
 bool recursion(int i, int j) {
     if (graph[i].size() > 3 || graph[j].size() > 3) return false;
-    if (i == j && j != k2 - 1) return recursion(i, j + 1);
-    if (i == k2 && j == 0) {
-       for (int i = 0; i < k2; i++) {
+    if (i == j && j != end - 1) return recursion(i, j + 1);
+    if (i == j && j == end - 1) {
+       for (int i = start; i < end; i++) {
             if (graph[i].size() != 3) return false;
-       } if (check_cycle() >= g) return true;
+       }
+       if (check_cycle() >= g) return true;
     }
     int min_cycle = check_cycle();
     if (min_cycle >= g) {
         if (!contains(graph[i], j)) {
             graph[i].push_back(j);
             graph[j].push_back(i);
-            if (j == k2 - 1) {
-                if (recursion(i + 1, 0)) return true;
+            if (j == end - 1) {
+                if (recursion(i + 1, start)) return true;
             } else {
                 if (recursion(i, j + 1)) return true;
             }
@@ -120,9 +111,8 @@ bool recursion(int i, int j) {
             it = std::find(graph[j].begin(), graph[j].end(), i);
             graph[j].erase(it);
         }
-    
-        if (j == k2 - 1) {
-            if (recursion(i + 1, 0)) return true;
+        if (j == end - 1) {
+            if (recursion(i + 1, start)) return true;
         } else {
             if (recursion(i, j + 1)) return true;
         }
@@ -130,14 +120,37 @@ bool recursion(int i, int j) {
     return false;
 }
 
+bool search(int i, int j) {
+    if (graph[i].size() > 3 || graph[j].size() > 3) return false;
+    if (i == j && j != outer_layer - 1) return search(i, j + 1);
+    if (i == outer_layer && j == 0) {
+        for (int i = 0; i < outer_layer; i++) {
+                if (graph[i].size() != 3) return false;
+        }
+        if (check_cycle() >= g) return true;
+    }
+    return true;
+}
+
 int main() {
-    graph = initiate_graph_6();
-    int a = recursion(0, 0);
+    /*graph = initiate_graph_6();
+    int a = recursion_6(0, 0);
     if (a == 0) std::cout << "false" << std::endl;
     else std::cout << "true" << std::endl;
     for (int i = 0; i < n; i++) {
         for (int j = 0; j < graph[i].size(); j++) {
             std::cout << i << ' ' << graph[i][j] << std::endl;
+        }
+    }*/
+    graph = initiate_graph();
+    int a = recursion(start, start);
+    if (a == 0) std::cout << "false" << std::endl;
+    else {
+        std::cout << "true" << std::endl;
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < graph[i].size(); j++) {
+                std::cout << i << ' ' << graph[i][j] << std::endl;
+            }
         }
     }
 }
