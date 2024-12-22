@@ -133,15 +133,6 @@ bool search(int i, int j) {
 }
 
 int main() {
-    /*graph = initiate_graph_6();
-    int a = recursion_6(0, 0);
-    if (a == 0) std::cout << "false" << std::endl;
-    else std::cout << "true" << std::endl;
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < graph[i].size(); j++) {
-            std::cout << i << ' ' << graph[i][j] << std::endl;
-        }
-    }*/
     graph = initiate_graph();
     int a = recursion(start, start);
     if (a == 0) std::cout << "false" << std::endl;
