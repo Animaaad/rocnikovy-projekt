@@ -120,18 +120,6 @@ bool recursion(int i, int j) {
     return false;
 }
 
-bool search(int i, int j) {
-    if (graph[i].size() > 3 || graph[j].size() > 3) return false;
-    if (i == j && j != outer_layer - 1) return search(i, j + 1);
-    if (i == outer_layer && j == 0) {
-        for (int i = 0; i < outer_layer; i++) {
-                if (graph[i].size() != 3) return false;
-        }
-        if (check_cycle() >= g) return true;
-    }
-    return true;
-}
-
 int main() {
     graph = initiate_graph();
     int a = recursion(start, start);
