@@ -3,15 +3,14 @@
 #include <queue>
 #include <algorithm>
 #include <cmath>
-int k = 6;
-int d = 3;
-int g = 6;
+int k = 8;
+int d = 5;
+int g = 8;
 int depth = d / 2;
 int start = k * (std::pow(2, depth) - 1);
 int outer_layer = (std::pow(2, (depth))) * k;
 int end = start + outer_layer;
 int n = end;
-int k3 = k * 2;
 std::vector<std::vector<int>> graph;
 
 bool contains(const std::vector<int> vec, int value) {
@@ -23,7 +22,7 @@ std::vector<std::vector<int>> initiate_graph() {
     int current;
     for (int layer = 0; layer <= depth; layer++) {
         int layer_total = std::pow(2, layer) * k;
-        int layers_total = std::pow(2, (layer + 1) - 1) * k ;
+        int layers_total = (std::pow(2, (layer + 1)) - 1) * k ;
         for (int i = 0; i < layer_total; i++) {
             std::vector<int> vec;
             current++;
@@ -33,15 +32,15 @@ std::vector<std::vector<int>> initiate_graph() {
                 vec.push_back(child1);
                 vec.push_back(child2);
             } else if (layer == depth) {
-                int parent = std::pow(2, (layer - 1)) * k - //2 ^ (layer - 1) * k is zero of the outer level,   
-                (std::pow(2, (layer - 1)) * k - i / 2); //subtracting the reverse of the current vertice position                                  
-                vec.push_back(parent);                  //to get to the correct parent
+                int parent = start - 
+                (outer_layer / 2 - i / 2);                                
+                vec.push_back(parent);                  
             } else {
                 int child1 = layers_total + (i) * 2;
                 int child2 = child1 + 1;
                 vec.push_back(child1);
                 vec.push_back(child2);
-                int parent = std::pow(2, (layer - 1)) * k - 
+                int parent = std::pow(2, (layer)- 1) * k - 
                 (std::pow(2, (layer - 1)) * k - i / 2);
                 vec.push_back(parent);
             }
@@ -87,42 +86,40 @@ int check_cycle() {
     return min;
 }
 
-bool recursion(int i, int j) {
-    if (graph[i].size() > 3 || graph[j].size() > 3) return false;
-    if (i == j && j != end - 1) return recursion(i, j + 1);
+bool search(int i, int j) {
+    if (i == j && j != end - 1) return search(i, j + 1);
     if (i == j && j == end - 1) {
        for (int i = start; i < end; i++) {
             if (graph[i].size() != 3) return false;
        }
        if (check_cycle() >= g) return true;
     }
-    int min_cycle = check_cycle();
-    if (min_cycle >= g) {
-        if (!contains(graph[i], j)) {
-            graph[i].push_back(j);
-            graph[j].push_back(i);
-            if (j == end - 1) {
-                if (recursion(i + 1, start)) return true;
-            } else {
-                if (recursion(i, j + 1)) return true;
+    if (!contains(graph[i], j) && graph[i].size() < 3 && graph[j].size() < 3) {
+        graph[i].push_back(j);
+        graph[j].push_back(i);
+        if (bfs(i) >= g) {
+           if (j == end - 1) {
+           if (search(i + 1, start)) return true;
+           } else {
+                if (search(i, j + 1)) return true;
             }
-            auto it = std::find(graph[i].begin(), graph[i].end(), j);
-            graph[i].erase(it);
-            it = std::find(graph[j].begin(), graph[j].end(), i);
-            graph[j].erase(it);
         }
-        if (j == end - 1) {
-            if (recursion(i + 1, start)) return true;
-        } else {
-            if (recursion(i, j + 1)) return true;
-        }
+        auto it = std::find(graph[i].begin(), graph[i].end(), j);
+        graph[i].erase(it);
+        it = std::find(graph[j].begin(), graph[j].end(), i);
+        graph[j].erase(it);
+    }
+    if (j == end - 1) {
+        if (search(i + 1, start)) return true;
+    } else {
+        if (search(i, j + 1)) return true;
     }
     return false;
 }
 
 int main() {
     graph = initiate_graph();
-    int a = recursion(start, start);
+    int a = search(start, start);
     if (a == 0) std::cout << "false" << std::endl;
     else {
         std::cout << "true" << std::endl;
