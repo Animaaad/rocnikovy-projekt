@@ -122,7 +122,9 @@ no cycle is shorter than g
 if k is odd, tests all the possible subsets of vertices of the complete graph
 on vertices {odd_start, ..., end}, that are viable,
 i.e. no vertex has more than 3 edges incident with it, and 
-no cycle is shorter than g*/
+no cycle is shorter than g
+if the graph exists, it will find it, but the graph might have some vertices
+that aren't incedent with any edges, we can just disregard them*/
 bool search(int i, int j) {
     if (i == j && j != end - 1) return search(i, j + 1);
     if (i < start && j < start) {
