@@ -114,6 +114,10 @@ int check_cycle() {
 
 /*
 main function of the code
+the minimal possible graph with those parameteres has to have at least
+k trees of height d/2 because the distance between the vertices that have 2
+edges indecent with them has to be at least d, and every vertex on the path
+between them has to be incedent with at least 3 edges
 @return whether the minimal possible graph for the parameters k, d, g exists
 if k is even, tests all the possible subsets of vertices of the complete graph
 on vertices {start, ..., end}, that are viable,
