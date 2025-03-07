@@ -13,7 +13,6 @@ depth is the height of each individual tree
 outer_layer is the number of vertices that are on the "outer_layer"
 end is the last vertex in the graph
 odd_mode indicates if k is odd
-odd_start is the first vertex of the layer that is right before the outer layer
 */ 
 int depth;
 int start;                
@@ -21,7 +20,9 @@ int outer_layer;
 int end;
 int n;
 bool odd_mode;
-int odd_start;
+int odd_end;
+int extra;
+int extra_start;
 std::vector<std::vector<int>> graph;
 
 bool contains(const std::vector<int> vec, int value) {
@@ -43,31 +44,56 @@ std::vector<std::vector<int>> initialize_graph() {
     std::vector<std::vector<int>> graf;
     for (int layer = 0; layer <= depth; layer++) {
         int layer_total = std::pow(2, layer) * k;
-        int layers_total = (std::pow(2, (layer + 1)) - 1) * k ;
+        int layers_total = (std::pow(2, (layer + 1)) - 1) * k;
         for (int i = 0; i < layer_total; i++) {
             std::vector<int> vec;
-            if (layer == depth) { //special case, this layer has no children
-                if (!odd_mode) {
-                    int parent = odd_start + i / 2;
-                    vec.push_back(parent);
-                }
-            } else {
-                if (!odd_mode || layer != depth - 1) {
-                    int child1 = layers_total + (i) * 2;
-                    int child2 = child1 + 1;
-                    vec.push_back(child1);
-                    vec.push_back(child2);
-                }
-                if (layer != 0) { //special case, this layer has no parents
+            if (layer != depth) { //special case, this layer has no children        
+                int child1 = layers_total + (i) * 2;
+                int child2 = child1 + 1;
+                vec.push_back(child1);
+                vec.push_back(child2);
+            }
+            if (layer != 0) { //special case, this layer has no parents
                 /*this calculates the start of the previous level,
                  and then adds i/2 to get from the start of the previous layer
                  to the correct vertex*/
-                   int parent = std::pow(2, (layer)- 1) * k -
+                   int parent = (std::pow(2, layer) - 1) * k -
                     (std::pow(2, (layer - 1)) * k - i / 2);
-                    
                     vec.push_back(parent);
-                }
             }
+            graf.push_back(vec);
+        }
+    }
+    if (odd_mode) {
+        int res = outer_layer * 2 % 3;
+        switch (res) {
+        case 1: {
+            std::vector<int> vec;
+            vec.push_back (start + outer_layer + 1);
+            graf.push_back(vec);
+            std::vector<int> vec2;
+            vec2.push_back (start + outer_layer);
+            graf.push_back(vec2);
+            break;
+        }
+        case 2: {
+            std::vector<int> vec;
+            vec.push_back (start + outer_layer + 1);
+            graf.push_back(vec);
+            std::vector<int> vec2;
+            vec2.push_back (start + outer_layer);
+            graf.push_back(vec2);
+            std::vector<int> vec3;
+            vec3.push_back (start + outer_layer + 3);
+            graf.push_back(vec3);
+            std::vector<int> vec4;
+            vec4.push_back (start + outer_layer + 2);
+            graf.push_back(vec4);
+            break;
+        }
+        }
+        for (int i = 0; i < extra - res * 2; i++) {
+            std::vector<int> vec;
             graf.push_back(vec);
         }
     }
@@ -94,6 +120,7 @@ int bfs(int s) {
                 parents[v] = u;
                 distance[v] = distance [u] + 1;
                 visited[v] = true;
+                if (distance[v] >= g) return INT_MAX;
             }
         }
     }
@@ -114,10 +141,7 @@ int check_cycle() {
 
 /*
 main function of the code
-the minimal possible graph with those parameteres has to have at least
-k trees of height d/2 because the distance between the vertices that have 2
-edges indecent with them has to be at least d, and every vertex on the path
-between them has to be incedent with at least 3 edges
+the 
 @return whether the minimal possible graph for the parameters k, d, g exists
 if k is even, tests all the possible subsets of vertices of the complete graph
 on vertices {start, ..., end}, that are viable,
@@ -125,39 +149,42 @@ i.e. no vertex has more than 3 edges incident with it, and
 no cycle is shorter than g
 if k is odd, tests all the possible subsets of vertices of the complete graph
 on vertices {odd_start, ..., end}, that are viable,
-i.e. no vertex has more than 3 edges incident with it, and 
-no cycle is shorter than g
-if the graph exists, it will find it, but the graph might have some vertices
-that aren't incedent with any edges, we can just disregard them*/
+i.e. no vertex has more than 3 edges incident with it, and
+no cycle is shorter than g*/
 bool search(int i, int j) {
     if (i == j && j != end - 1) return search(i, j + 1);
-    if (i < start && j < start) {
-        if (j == end - 1) {
-            if (search(i + 1, odd_start)) return true;
-        } else {
-            if (search(i, j + 1)) return true;
-        }
-    }
     if (i == j && j == end - 1) {
         if (odd_mode) {
-            for (int i = start; i < end; i++) {
-                if (graph[i].size() != 3 && graph[i].size() != 0) return false;
+            for (int i = k; i < end; i++) {             //we can start from the variable start if k > 5
+                if (graph[i].size() != 3) return false;
             }
-            for (int i = odd_start; i < start; i++) {
-                if (graph[i].size() != 2) return false; //3 if k > 5
+            for (int i = 0; i < k; i++) {
+              if (graph[i].size() != 2) return false; //only needed for k = 5
             }
         } else {
             for (int i = start; i < end; i++) {
-                if (graph[i].size() != 3) return false;
+               if (graph[i].size() != 3) return false;
             }
         }
        if (check_cycle() >= g) return true;
     }
-    if (!contains(graph[i], j) && graph[i].size() < 3 && graph[j].size() < 3 &&
-    /*if k == 5, then the layer that comes before the outer layer is the 
-    first layer, and vertices on it can't be incident with more than 2 edges*/
-    !(((i < start && graph[i].size() == 2) ||
-    (j < start && graph[j].size() == 2)) && (k == 5))) {
+    if (j < i || (odd_mode && ((i < start + outer_layer && j < start + outer_layer) || 
+    (i >= start + outer_layer && j >= start + outer_layer)))) {
+        if (j == end - 1) {
+            if (search(i + 1, start)) {
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            if (search(i, j + 1)) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+    }
+    if (!contains(graph[i], j) && graph[i].size() < 3 && graph[j].size() < 3) {
         graph[i].push_back(j);
         graph[j].push_back(i);
         //the cycle can appear only using the vertex i, so we can use bfs
@@ -182,25 +209,25 @@ bool search(int i, int j) {
 }
 
 int main() {
-    std::cin >> k;
-    g = k;
-    d = k - 3;
+    std::cin >> k >> g >> d;
     depth = d / 2;
     start = k * (std::pow(2, depth) - 1);   
     outer_layer = (std::pow(2, (depth))) * k;
     end = start + outer_layer;
     n = end;
-    odd_start = start - outer_layer / 2;
     if (k % 2 == 1) {
-        odd_mode = true; 
+        depth--;
+        odd_mode = true;
+        outer_layer = (std::pow(2, (depth))) * k;
+        start = k * (std::pow(2, depth) - 1);
+        extra_start = start + outer_layer;
+        extra = (outer_layer * 2 + 3) / 3;
+        end = start + outer_layer + extra;
+        n = end;
     }
     graph = initialize_graph();
-    int a;
-    if (odd_mode) {
-        a = search(odd_start, odd_start);
-    } else {
-        a = search(start, start);
-    }
+    int a = 0;
+    a = search(start, start);
     if (a == 0) std::cout << "false" << std::endl;
     /*will print the graph that is compatible with our criteria
     if such graph exists*/
