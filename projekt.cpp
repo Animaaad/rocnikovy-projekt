@@ -23,7 +23,9 @@ bool odd_mode;
 int odd_end;
 int extra;
 int extra_start;
+int tree_leaves;
 std::vector<std::vector<int>> graph;
+std::vector<std::vector<int>> time_saving_vec;
 
 bool contains(const std::vector<int> vec, int value) {
     return std::find(vec.begin(), vec.end(), value) != vec.end();
@@ -139,6 +141,25 @@ int check_cycle() {
     return min;
 }
 
+int prep() {
+    for (int i = 0; i < k; i++) {
+        std::vector<int> vec;
+        for (int j = start; j < tree_leaves + start; j++) {
+            vec.push_back(i * tree_leaves + j);
+        }
+        time_saving_vec.push_back(vec);
+    }
+    return 0;
+}
+
+int tree_index(int value) {
+    for (int i = 0; true; i++) {
+        if (contains(time_saving_vec[i], value)) {
+            return i;
+        }
+    }
+}
+
 /*
 main function of the code
 the 
@@ -153,7 +174,15 @@ i.e. no vertex has more than 3 edges incident with it, and
 no cycle is shorter than g*/
 bool search(int i, int j) {
     if (i == j && j != end - 1) return search(i, j + 1);
-    if (i == j && j == end - 1) {
+    if (!odd_mode && abs(tree_index(i) - tree_index(j)) > 1 && 
+        !(tree_index(i) == 0 && tree_index(j) == k - 1)) {
+        if (j == end - 1) {
+            if (search(i + 1, start)) return true;
+        } else {
+            if (search(i, j + 1)) return true;
+        }
+    }
+    if (i == j) {
         if (odd_mode) {
             for (int i = k; i < end; i++) {             //we can start from the variable start if k > 5
                 if (graph[i].size() != 3) return false;
@@ -168,7 +197,7 @@ bool search(int i, int j) {
         }
        if (check_cycle() >= g) return true;
     }
-    if (j < i || (odd_mode && ((i < start + outer_layer && j < start + outer_layer) || 
+    if ((j < i && !(j - i > outer_layer - (outer_layer / k * 2))) || (odd_mode && ((i < start + outer_layer && j < start + outer_layer) || 
     (i >= start + outer_layer && j >= start + outer_layer)))) {
         if (j == end - 1) {
             if (search(i + 1, start)) {
@@ -211,10 +240,12 @@ bool search(int i, int j) {
 int main() {
     std::cin >> k >> g >> d;
     depth = d / 2;
-    start = k * (std::pow(2, depth) - 1);   
+    start = k * (std::pow(2, depth) - 1);
     outer_layer = (std::pow(2, (depth))) * k;
     end = start + outer_layer;
     n = end;
+    tree_leaves = outer_layer / k;
+    int abc = prep();
     if (k % 2 == 1) {
         depth--;
         odd_mode = true;
